@@ -1,0 +1,35 @@
+# wordcloud
+conda install -c conda-forge wordcloud
+
+#nltk
+conda install -c conda-forge nltk
+import nltk 
+nltk.download("wordnet") 
+nltk.download("averaged_perceptron_tagger")
+
+#gensim
+conda install -c conda-forge gensim
+
+#LDAvis
+conda install  -c conda-forge pyLDAvis
+
+# some issue with tensorflow ?
+# pip install transformers
+conda install -c conda-forge tensorflow
+
+# spacy
+conda install -c conda-forge spacy
+python -m  spacy download en_core_web_trf
+python -m spacy download en_core_web_trf
+
+# scikit-multilearn is not available in conda
+pip install scikit-multilearn
+pip install arff
+
+#bit array
+conda install -c conda-forge bitarray
+
+#streamlit
+conda install -c conda-forge streamlit
+pip install streamlit
+

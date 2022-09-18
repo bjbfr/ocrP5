@@ -1,0 +1,150 @@
+Milestone 1 : Récupération des questions de Stack Overflow
+Livrable :
+Fichier CSV de questions extraites de Stack Overflow.
+Niveau d’avancement : 5 %
+Problèmes et erreurs courants :
+Risque de récupérer des questions qui ne seraient pas pertinentes pour réaliser la proposition de mots clés, par exemple si elles sont mal rédigées et/ou n’ont que peu de tags ou des tags non pertinents.
+Recommandations :
+La requête SQL d’extraction doit intégrer des filtres pour garantir de récupérer des questions potentiellement pertinentes et avec suffisamment de tags :
+Pertinentes : filtre par exemple sur View Count, et/ou FavoriteCount et/ou Score et/ou answerCount.
+Avec suffisamment de tags : utiliser l’astuce suivante pour ne prendre que les questions avec 5 tags = LEN(Tags) - LEN(REPLACE(Tags, '<','')) >= 5
+L’étudiant pourra ainsi récupérer 50 000 questions contenant 5 tags.
+
+==============================================================================================================================================================================================================================================
+
+Milestone 2 : Nettoyage et prétraitement des questions
+Livrable :
+Notebook de nettoyage et prétraitement des questions.
+Niveau d’avancement : 20 %
+Recommandations :
+Réaliser un prétraitement de texte :
+Il s’agit de nettoyer le texte (ponctuation, stopwords…), et de transformer les mots via une lemmatization.
+Ce prétraitement doit être adapté au contexte et surtout à l’objectif. Nous cherchons à déterminer des mots clés :
+Un stemming (mots racines) n’est pas adapté dans ce cas.
+Les noms, voire certains verbes, permettent de définir ces mots clés. Les adjectifs ou les adverbes sont beaucoup moins pertinents.
+Ce prétraitement concerne la variable « Title » et la variable « Body ». Pour la variable « Body », un nettoyage préalable des balises HTML et 
+des formules est à réaliser par exemple via BeautifulSoup, afin de ne récupérer que le texte.
+Les questions seront ensuite séparées en 2 groupes, Train et Test.
+Réaliser un bag of words (countVectorizer, Tf_idf…) afin de créer des « features » pour chaque question :
+Pour le bag of words, l’étudiant pourra tester plusieurs approches, par exemple fit et transform sur « Title » ou sur « Title » + « Body », fit sur « Title » et transform sur « Title » + « Body » (permet de ne garder que le vocabulaire des « Title » moins verbeux, et de renforcer le comptage avec le contenu de « Body ».
+Le « fit » se fera sur les questions Train. Seul un « transform » sera appliqué pour les questions Test
+
+==============================================================================================================================================================================================================================================
+
+Milestone 3 : Proposition de mots clés – Approche non supervisée
+Livrable :
+Notebook de réalisation d’une approche non supervisée de proposition de mots clés.
+Niveau d’avancement : 45 %
+Recommandations :
+L’objectif est de créer, à partir des questions, des topics de manière non supervisée. Cette approche peut par exemple être réalisée via countVectorizer + LDA (ou toute autre manière, comme TF-IDF + NMF).
+
+Le LDA permet de déterminer des topics :
+Dans un contexte de détermination de sujets ou thématiques, le nombre optimal de topics peut être déterminé par la mesure « perplexity »,
+mais plus idéalement par le « coherence score » présent dans la librairie Gensim.
+
+Dans notre cas de détermination de mots clés, nous sommes plus dans une problématique de réduction de dimension via le 
+LDA (dimension = nombre de topics) ; une réduction trop importante nous ferait perdre en variance, et limiterait donc le spectre des mots clés proposés
+inclus dans les topics.
+
+Cette mesure « technique » de cohérence score n'est donc pas idéale dans notre cas, il faudra veiller à utiliser des mesures plus orientées « métier » 
+(cf. plus loin), tout en contrôlant que le « coherence score » ne baisse pas trop.
+Le LDA constitue de fait une réduction de dimension égale au nombre de topics.
+Une représentation en 2 dimensions des topics du LDA avec la librairie LDAvis permet de mieux analyser les topics et les principaux mots associés.
+Détermination des mots clés des questions Test :
+L’entraînement du LDA réalisé sur les questions Train permet de générer 2 matrices :
+Mtopics-words (topics en ligne et words du bag of words en colonnes) = probabilité de mots pour chaque topic.
+M(train)quest-topics (questions Train en ligne et topics en colonnes, résultat du fit du LDA sur les questions Train)
+ = probabilité pour une question d’appartenir à chacun des topics.
+Pour retrouver les probabilités de mots pour les questions Train, il suffit de calculer la matrice
+ M(train)qest-words = M(train)quest-topics x Mtopics-words.
+Pour trouver les probabilités de mots pour les questions Test, il suffit de reprendre la même formule, sachant que M(test)quest-topics est
+ le résultat du predict du LDA sur les questions Test.
+Il peut être intéressant de ne prendre que les principaux topics et principaux « words » en mettant un seuil aux valeurs dans les matrices 
+correspondantes(en forçant à zéro si inférieur au seuil).
+
+Une approche complémentaire « semi-supervisée » peut être mise en œuvre en option = utiliser les tags des questions Train pour proposer des mots 
+clés aux questions Test, par exemple en prenant les questions Train les plus similaires à chaque question Test 
+(cosine similarity sur les Mquest-topics de Test et Train).
+Comme précédemment, le plus simple et le plus rapide est la multiplication de 2 matrices : celle des cosinus par la matrice M(train)quest-tag créée 
+par vectorisation des tags des questions Train (bag of words des tags).
+
+Mesures orientées métier :
+Il n’y a pas de mesure unique et optimale pour évaluer les mots clés proposés, mais une combinaison d’approches permettra d’avoir une idée de sa pertinence.
+
+Taux de couverture des tags réels : 
+la limite est la pertinence des tags réels proposés par les créateurs des questions.
+
+Taux de couverture des mots des questions : 
+permet de s’assurer qu’il n’y a pas d’appauvrissement des mots clés suite à un nombre de topics trop faible.
+
+Test de visu sur quelques questions : 
+permet de s’assurer de la cohérence des mots clés proposés avec le contexte de la question, et de contrôler qu’un mot clé
+n’est pas systématiquement proposé pour toutes les questions (c’est déjà arrivé à certains étudiants).
+
+==============================================================================================================================================================================================================================================
+
+Milestone 4 : Proposition de mots clés – Approche supervisée classique
+Livrable :
+Notebook de réalisation d’une classification supervisée pour déterminer les mots clés à proposer, à partir des tags réels saisis par les rédacteurs des questions.
+Niveau d’avancement : 80 %
+Recommandations :
+Il est préconisé de mettre en œuvre une approche OneVsRestClassifier testée sur différents algorithmes (logisticRegression, SGDClassifier…).
+Dans une approche classique, la création des « features » se fera via un traitement de bag of words (CountVectorizer ou tTF-IDF), ou d’un LDA.
+Le nombre de tags différents étant très important, et parfois certains tags étant peu représentés, il est préconisé de limiter l’entraînement sur les tags les plus fréquents (target « y » générée via un MultiLabelBinarizer fitté sur les N tags les plus fréquents du Train).
+La mesure « jaccard_score » sera de préférence utilisée pour comparer les algorithmes. Il n’est pas exigé d’optimisation des hyperparamètres des algorithmes.
+Les mêmes mesures orientées métier que lors de l’étape précédente (non supervisé) seront mises en œuvre, afin de comparer les résultats.
+Les prédictions ne proposent parfois aucun « tag » pour certaines questions. Pour y remédier, il est possible de calculer une probabilité via un predict_proba (à la place d’un simple predict), et ainsi de récupérer les 5 meilleures probabilités de « tag », éventuellement avec un seuil.
+
+==============================================================================================================================================================================================================================================
+
+Milestone 5 : Proposition de mots clés – Approche supervisée Sentence embedding
+Livrable :
+Notebook complémentaire au précédent, mettant en œuvre des techniques d’embedding.
+Niveau d’avancement : 100 %
+Recommandations :
+L’objectif de cette étape est de permettre à l’étudiant de découvrir des techniques NLP plus avancées. Veillez à ce qu’il ne passe pas trop de temps sur ce sujet.
+Pour l’aider, il est mis à sa disposition dans les ressources un notebook donnant un exemple de mise en œuvre de ces techniques : Word2Vec (peut être remplacé par Doc2Vec), BERT, USE (Universal Sentence Encoder).
+L’étudiant réalisera la création de « features » à l’aide de chacune de ces trois techniques (technique de « feature extraction » orientée « sentence embedding »). Il n’est pas attendu une grande expertise, il s’agit surtout d’une introduction à ces techniques.
+La même approche de « OneVsRestClassifier » que dans l’étape précédente sera mise en œuvre et comparée. 
+
+==============================================================================================================================================================================================================================================
+Évaluation des compétences
+Prétraiter des données non structurées pour obtenir un jeu de données exploitable
+La compétence est validée si :
+
+❒ Le texte a été nettoyé en utilisant des expressions régulières et librairies spécialisées (BeautifulSoup) (retirer la ponctuation, les balises HTML...).
+
+❒ Les champs de texte sont nettoyés (retirer la ponctuation, les mots de liaison, mettre tout en minuscules).
+
+❒ Une fonction permettant de tokeniser une phrase a été écrite et fonctionne correctement.
+
+❒ Une fonction permettant de stemmer une phrase a été écrite et fonctionne correctement.
+
+❒ Une fonction permettant de lemmatiser une phrase a été écrite et fonctionne correctement.
+
+❒ Une phrase (ou un court texte) d'exemple permet d'illustrer et de tester la bonne réalisation des étapes précédentes.
+
+Mettre en œuvre des techniques de réduction de dimension
+La compétence est validée si :
+
+❒ La nécessité de la réduction de dimension dans le cas de données texte est justifiée.
+
+❒ Une méthode de réduction de dimension (ex. : ACP) pour des données texte est appliquée.
+
+❒ Le choix des valeurs des paramètres dans la méthode de réduction de dimension retenue est justifié (ex. : le nombre de dimensions conservées pour l'ACP).
+
+Mettre en œuvre des techniques d’extraction de features pour des données non structurées
+La compétence est validée si :
+
+❒ Des features bag of words ont été extraites (avec étapes de nettoyage supplémentaires : retirer les stopwords, seuil de fréquence des mots, normalisation des mots (racines, utilisation du package NLTK)) ; utilisation de CountVectoriser et/ou TF-IDF.
+
+❒ Des features de type Word/Sentence embbeding ont été extraites, au minimum selon 3 approches : Word2Vec (ou Doc2Vec, Glove…), BERT et USE.
+
+Représenter graphiquement des données à grandes dimensions
+La compétence est validée si :
+
+❒ Au moins un graphique représentant les informations contenues dans des données à plus de 2D a été réalisé.
+
+❒ Le graphique réalisé est lisible (taille, densité, etc.) et compréhensible (avec un titre et une légende, axes légendés).
+
+❒ L'apprenant a expliqué la signification des différents éléments graphiques à un public non expert (variables représentées sur les axes, par les couleurs, la taille...).
