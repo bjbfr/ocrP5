@@ -1,5 +1,6 @@
 __pycache__/
 app/models/
 *.pdf
-data/
+data/*/
+data/QueryResults.csv
 buffer.txt

@@ -1,0 +1,5 @@
+for login with heroku:
+set HomeDrive="c:/users/benjamin.bouchard" 
+$env:HOMEDRIVE = "c:/users/benjamin.bouchard"
+
+https://dashboard.heroku.com/apps/ocr-p5-tags/deploy/heroku-git
