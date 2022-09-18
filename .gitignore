@@ -1,3 +1,5 @@
 __pycache__/
 app/models/
 *.pdf
+data/
+buffer.txt

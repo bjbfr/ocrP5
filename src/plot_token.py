@@ -45,8 +45,8 @@ def termf_coverage(data,col,ns):
 
     df.plot(kind="bar",x='n most used tokens',y='cumulative term frequency',**plot_params)
 
-n_most_used_tokens = lambda n,data,col:preprocessing.count_tokens(data,col,doc_freq=True,out_df=True).nlargest(n,'doc_freq')
-n_less_used_tokens = lambda n,data,col:preprocessing.count_tokens(data,col,doc_freq=True,out_df=True).nsmallest(n,'doc_freq')
+
+#n_less_used_tokens = lambda n,data,col:preprocessing.count_tokens(data,col,doc_freq=True,out_df=True).nsmallest(n,'doc_freq')
 
 def plot_docf(data,col,n,figsize_=(25,50)):
     """
@@ -54,7 +54,8 @@ def plot_docf(data,col,n,figsize_=(25,50)):
     """
     # compute stats
     stat_col = 'doc_freq'
-    n_most_used_tokens = preprocessing.count_tokens(data,col,doc_freq=True,out_df=True).nlargest(n,stat_col)
+    #n_most_used_tokens = preprocessing.count_tokens(data,col,doc_freq=True,out_df=True).nlargest(n,stat_col)
+    n_most_used_tokens_ = preprocessing.n_most_used_tokens(n,data,col)
 
     # create fig and axes
     N = 25                             # number of tokens per ax
@@ -71,7 +72,7 @@ def plot_docf(data,col,n,figsize_=(25,50)):
     l = len(data[col])
     for ((start,end),ax) in zip(z,chain(*axs) if len(axs.shape) == 2 else axs):
         secax = ax.secondary_yaxis('right',functions=(lambda x :x*l ,lambda x : x/l))
-        _ = n_most_used_tokens.iloc[start:end,:].plot(kind="bar",x="tokens",y=stat_col,ax=ax,legend=False,grid=True,xlabel="")
+        _ = n_most_used_tokens_.iloc[start:end,:].plot(kind="bar",x="tokens",y=stat_col,ax=ax,legend=False,grid=True,xlabel="")
 
 # def df_docCount_nmost_used(d,col,ids):
 #     c = preprocessing.count_tokens(d,col,doc_freq=True,out_df=True).sort_values(by=['doc_freq'],ascending=False).iloc[ids,:]

@@ -70,6 +70,8 @@ lower_list = lambda l: list(map(lower_str,l))
 list_2_str  = lambda l: '_'.join(sorted(l))
 filter_empty_list = lambda l: list(filter(lambda x: len(x) > 0,l))
 
+n_most_used_tokens = lambda n,data,col:count_tokens(data,col,doc_freq=True,out_df=True).nlargest(n,'doc_freq')
+
 def make_sort_list(sorter=None):
     if sorter is not None:
         sort_list  = lambda l: sorted(l,key=sorter)
@@ -82,7 +84,7 @@ def make_count_sorter(count):
     return sorter
 
 # binary list to int
-list_2_int = lambda b:ba2int(bitarray(b.tolist()))
+#list_2_int = lambda b:ba2int(bitarray(b.tolist()))
 
 # def make_remove_pattern_list(signs=None,patterns=None):
 #     if signs is None and patterns is None:
